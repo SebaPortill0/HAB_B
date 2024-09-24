@@ -11,14 +11,20 @@ from tools.advanced_scraper import scraper
 from tools.google_serper import serper_search
 from utils.logging import log_function, setup_logging
 from utils.message_handling import get_ai_message_contents
-from prompt_engineering.guided_json_lib import guided_json_search_query, guided_json_best_url, guided_json_router_decision
+from prompt_engineering.guided_json_lib import (
+    guided_json_search_query,
+    guided_json_best_url,
+    guided_json_router_decision,
+)
 
 setup_logging(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+
 class MessageDict(TypedDict):
     role: str
     content: str
+
 
 class State(TypedDict):
     meta_prompt: Annotated[List[MessageDict], add_messages]
@@ -29,6 +35,7 @@ class State(TypedDict):
     chat_finished: bool
     recursion_limit: int
 
+
 state: State = {
     "meta_prompt": [],
     "conversation_history": [],
@@ -36,7 +43,7 @@ state: State = {
     "router_decision": None,
     "chat_limit": None,
     "chat_finished": False,
-    "recursion_limit": None
+    "recursion_limit": None,
 }
 
 # class State(TypedDict):
@@ -72,52 +79,64 @@ state: State = {
 #     state["chat_limit"] = chat_limit
 #     return chat_limit
 
+
 def routing_function(state: State) -> str:
     if state["router_decision"]:
         return "no_tool_expert"
     else:
         return "tool_expert"
 
+
 def set_chat_finished(state: State) -> bool:
     state["chat_finished"] = True
     final_response = state["meta_prompt"][-1].content
-    print(colored(f"\n\n Meta Agent 🧙‍♂️: {final_response}", 'cyan'))
+    print(colored(f"\n\n Meta Agent 🧙‍♂️: {final_response}", "cyan"))
 
     return state
 
+
 class MetaExpert(BaseAgent[State]):
-    def __init__(self, model: str = None, server: str = None, temperature: float = 0, 
-                 model_endpoint: str = None, stop: str = None):
+    def __init__(
+        self,
+        model: str = None,
+        server: str = None,
+        temperature: float = 0,
+        model_endpoint: str = None,
+        stop: str = None,
+    ):
         super().__init__(model, server, temperature, model_endpoint, stop)
         self.llm = self.get_llm(json_model=False)
 
-    def get_prompt(self, state:None) -> str:
-        system_prompt = read_markdown_file('prompt_engineering/meta_prompt.md')
+    def get_prompt(self, state: None) -> str:
+        system_prompt = read_markdown_file("prompt_engineering/meta_prompt.md")
         return system_prompt
-        
-    def process_response(self, response: Any, user_input: str = None, state: State = None) -> Dict[str, List[MessageDict]]:
+
+    def process_response(
+        self, response: Any, user_input: str = None, state: State = None
+    ) -> Dict[str, List[MessageDict]]:
         user_input = None
         updates_conversation_history = {
             "meta_prompt": [
                 {"role": "user", "content": f"{user_input}"},
-                {"role": "assistant", "content": str(response)}
-
+                {"role": "assistant", "content": str(response)},
             ]
         }
         return updates_conversation_history
-    
+
     @log_function(logger)
     def get_conv_history(self, state: State) -> str:
         conversation_history = state.get("conversation_history", [])
         expert_message_history = get_ai_message_contents(conversation_history)
         print(f"Expert Data Collected: {expert_message_history}")
-        expert_message_history = f"Expert Data Collected: <Ex>{expert_message_history}</Ex>"
+        expert_message_history = (
+            f"Expert Data Collected: <Ex>{expert_message_history}</Ex>"
+        )
         return expert_message_history
-    
+
     def get_user_input(self) -> str:
         user_input = input("Enter your query: ")
         return user_input
-    
+
     def get_guided_json(self, state: State) -> Dict[str, Any]:
         pass
 
@@ -130,13 +149,19 @@ class MetaExpert(BaseAgent[State]):
         # counter = chat_counter(state)
         user_input = state.get("user_input")
         state = self.invoke(state=state, user_input=user_input)
-        
+
         return state
-    
+
 
 class NoToolExpert(BaseAgent[State]):
-    def __init__(self, model: str = None, server: str = None, temperature: float = 0, 
-                 model_endpoint: str = None, stop: str = None):
+    def __init__(
+        self,
+        model: str = None,
+        server: str = None,
+        temperature: float = 0,
+        model_endpoint: str = None,
+        stop: str = None,
+    ):
         super().__init__(model, server, temperature, model_endpoint, stop)
         self.llm = self.get_llm(json_model=False)
 
@@ -144,64 +169,71 @@ class NoToolExpert(BaseAgent[State]):
         # print(f"\nn{state}\n")
         system_prompt = state["meta_prompt"][-1].content
         return system_prompt
-        
-    def process_response(self, response: Any, user_input: str = None, state: State = None) -> Dict[str, Union[str, dict]]:
+
+    def process_response(
+        self, response: Any, user_input: str = None, state: State = None
+    ) -> Dict[str, Union[str, dict]]:
         updates_conversation_history = {
             "conversation_history": [
                 {"role": "user", "content": user_input},
-                {"role": "assistant", "content": f"{str(response)}"}
-
+                {"role": "assistant", "content": f"{str(response)}"},
             ]
         }
         return updates_conversation_history
-    
+
     def get_conv_history(self, state: State) -> str:
         pass
-    
+
     def get_user_input(self) -> str:
         pass
-    
+
     def get_guided_json(self, state: State) -> Dict[str, Any]:
         pass
 
     def use_tool(self) -> Any:
         pass
 
-
     # @log_function(logger)
     def run(self, state: State) -> State:
         # chat_counter(state)
         user_input = state["meta_prompt"][1].content
-        state = self.invoke(state=state, user_input=user_input)        
+        state = self.invoke(state=state, user_input=user_input)
         return state
-    
+
 
 class ToolExpert(BaseAgent[State]):
-    def __init__(self, model: str = None, server: str = None, temperature: float = 0, 
-                 model_endpoint: str = None, stop: str = None):
+    def __init__(
+        self,
+        model: str = None,
+        server: str = None,
+        temperature: float = 0,
+        model_endpoint: str = None,
+        stop: str = None,
+    ):
         super().__init__(model, server, temperature, model_endpoint, stop)
         self.llm = self.get_llm(json_model=False)
 
     def get_prompt(self, state) -> str:
         system_prompt = state["meta_prompt"][-1].content
         return system_prompt
-        
-    def process_response(self, response: Any, user_input: str = None, state: State = None) -> Dict[str, Union[str, dict]]:
+
+    def process_response(
+        self, response: Any, user_input: str = None, state: State = None
+    ) -> Dict[str, Union[str, dict]]:
         updates_conversation_history = {
             "conversation_history": [
                 {"role": "user", "content": user_input},
-                {"role": "assistant", "content": f"{str(response)}"}
-
+                {"role": "assistant", "content": f"{str(response)}"},
             ]
         }
         return updates_conversation_history
-    
+
     def get_conv_history(self, state: State) -> str:
         pass
-    
+
     def get_user_input(self) -> str:
         pass
-    
+
     def get_guided_json(self, state: State) -> Dict[str, Any]:
         pass
 
@@ -255,12 +287,11 @@ class ToolExpert(BaseAgent[State]):
         refine_query = self.get_llm(json_model=True)
         refine_prompt = refine_query_template.format(manager_response=full_query)
         input = [
-                {"role": "user", "content": full_query},
-                {"role": "assistant", "content": f"system_prompt:{refine_prompt}"}
+            {"role": "user", "content": full_query},
+            {"role": "assistant", "content": f"system_prompt:{refine_prompt}"},
+        ]
 
-            ]
-        
-        if self.server == 'vllm':
+        if self.server == "vllm":
             guided_json = guided_json_search_query
             refined_query = refine_query.invoke(input, guided_json)
         else:
@@ -271,14 +302,15 @@ class ToolExpert(BaseAgent[State]):
         serper_response = self.use_tool("serper", refined_query)
 
         best_url = self.get_llm(json_model=True)
-        best_url_prompt = best_url_template.format(manager_response=full_query, serper_results=serper_response)
+        best_url_prompt = best_url_template.format(
+            manager_response=full_query, serper_results=serper_response
+        )
         input = [
-                {"role": "user", "content": serper_response},
-                {"role": "assistant", "content": f"system_prompt:{best_url_prompt}"}
+            {"role": "user", "content": serper_response},
+            {"role": "assistant", "content": f"system_prompt:{best_url_prompt}"},
+        ]
 
-            ]
-        
-        if self.server == 'vllm':
+        if self.server == "vllm":
             guided_json = guided_json_best_url
             best_url = best_url.invoke(input, guided_json)
         else:
@@ -299,35 +331,46 @@ class ToolExpert(BaseAgent[State]):
 
         for key, value in updates.items():
             state = self.update_state(key, value, state)
-                
+
         return state
-    
+
+
 class Router(BaseAgent[State]):
-    def __init__(self, model: str = None, server: str = None, temperature: float = 0, 
-                 model_endpoint: str = None, stop: str = None):
+    def __init__(
+        self,
+        model: str = None,
+        server: str = None,
+        temperature: float = 0,
+        model_endpoint: str = None,
+        stop: str = None,
+    ):
         super().__init__(model, server, temperature, model_endpoint, stop)
         self.llm = self.get_llm(json_model=True)
 
     def get_prompt(self, state) -> str:
         system_prompt = state["meta_prompt"][-1].content
         return system_prompt
-        
-    def process_response(self, response: Any, user_input: str = None, state: State = None) -> Dict[str, Union[str, dict]]:
+
+    def process_response(
+        self, response: Any, user_input: str = None, state: State = None
+    ) -> Dict[str, Union[str, dict]]:
         updates_conversation_history = {
             "router_decision": [
                 {"role": "user", "content": user_input},
-                {"role": "assistant", "content": f"<Ex>{str(response)}</Ex> Todays date is {datetime.now()}"}
-
+                {
+                    "role": "assistant",
+                    "content": f"<Ex>{str(response)}</Ex> Todays date is {datetime.now()}",
+                },
             ]
         }
         return updates_conversation_history
-    
+
     def get_conv_history(self, state: State) -> str:
         pass
-    
+
     def get_user_input(self) -> str:
         pass
-    
+
     def get_guided_json(self, state: State) -> Dict[str, Any]:
         pass
 
@@ -371,15 +414,16 @@ class Router(BaseAgent[State]):
             If your manager's response suggest they have provided a final answer, return "end_chat".
 
         """
-        system_prompt = router_template.format(manager_response=state["meta_prompt"][-1].content)
+        system_prompt = router_template.format(
+            manager_response=state["meta_prompt"][-1].content
+        )
         input = [
-                {"role": "user", "content": ""},
-                {"role": "assistant", "content": f"system_prompt:{system_prompt}"}
-
-            ]
+            {"role": "user", "content": ""},
+            {"role": "assistant", "content": f"system_prompt:{system_prompt}"},
+        ]
         router = self.get_llm(json_model=True)
 
-        if self.server == 'vllm':
+        if self.server == "vllm":
             guided_json = guided_json_router_decision
             router_response = router.invoke(input, guided_json)
         else:
@@ -388,13 +432,13 @@ class Router(BaseAgent[State]):
         router_response = json.loads(router_response)
         router_response = router_response.get("router_decision")
         state = self.update_state("router_decision", router_response, state)
-        
+
         return state
-    
+
+
 # Example usage
 if __name__ == "__main__":
     from langgraph.graph import StateGraph
-
 
     # For Claude
     # agent_kwargs = {
@@ -404,11 +448,7 @@ if __name__ == "__main__":
     # }
 
     # For OpenAI
-    agent_kwargs = {
-        "model": "gpt-4o",
-        "server": "openai",
-        "temperature": 0.1
-    }
+    agent_kwargs = {"model": "gpt-4o", "server": "openai", "temperature": 0.1}
 
     # Ollama
     # agent_kwargs = {
@@ -444,15 +484,24 @@ if __name__ == "__main__":
 
     def routing_function(state: State) -> str:
         decision = state["router_decision"]
-        print(colored(f"\n\n Routing function called. Decision: {decision}", 'red'))
+        print(colored(f"\n\n Routing function called. Decision: {decision}", "red"))
         return decision
 
     graph = StateGraph(State)
 
-    graph.add_node("meta_expert", lambda state: MetaExpert(**agent_kwargs).run(state=state))
-    graph.add_node("router", lambda state: Router(**tools_router_agent_kwargs).run(state=state))
-    graph.add_node("no_tool_expert", lambda state: NoToolExpert(**agent_kwargs).run(state=state))
-    graph.add_node("tool_expert", lambda state: ToolExpert(**tools_router_agent_kwargs).run(state=state))
+    graph.add_node(
+        "meta_expert", lambda state: MetaExpert(**agent_kwargs).run(state=state)
+    )
+    graph.add_node(
+        "router", lambda state: Router(**tools_router_agent_kwargs).run(state=state)
+    )
+    graph.add_node(
+        "no_tool_expert", lambda state: NoToolExpert(**agent_kwargs).run(state=state)
+    )
+    graph.add_node(
+        "tool_expert",
+        lambda state: ToolExpert(**tools_router_agent_kwargs).run(state=state),
+    )
     graph.add_node("end_chat", lambda state: set_chat_finished(state))
 
     graph.set_entry_point("meta_expert")
