@@ -1,0 +1,10 @@
+{
+  "python_version": "3.11",
+  "dockerfile_lines": [],
+  "dependencies": [
+    "."
+  ],
+  "graphs": {
+      "jar3d": "./agents/jar3d_agent.py:workflow"
+  }
+}
