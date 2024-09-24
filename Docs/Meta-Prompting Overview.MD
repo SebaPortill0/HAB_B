@@ -1,5 +1,3 @@
-#metaprompting #IA #agentes #GPTpersonalizado #TemaYouTube #respaldado  
-#ingenieríadeprompts  
 Estas notas están derivadas de [Fuente](https://arxiv.org/abs/2401.12954)
 
 ## ¿Qué es Meta-Prompting?  
@@ -65,7 +63,3 @@ graph TD
 
 **El Prompt**  
 El Meta-Prompt está escrito en Markdown. Esto lo hace mucho más fácil de leer y permite una forma estandarizada de escribir prompts que la mayoría de los LLMs deberían entender. Explora el [[Meta-Prompt]]  
-
-# Mira el Video  
-
-[![Meta Prompting con Búsqueda Web](https://img.youtube.com/vi/CEXmSX5ijh4/0.jpg)](https://youtu.be/CEXmSX5ijh4)  

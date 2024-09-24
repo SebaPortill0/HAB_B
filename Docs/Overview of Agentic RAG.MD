@@ -1,5 +1,3 @@
-#RAG #agentes
-
 ## Componentes Principales del RAG Agente
 
 El RAG Agente tiene **dos** componentes principales:  
