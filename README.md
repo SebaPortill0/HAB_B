@@ -28,7 +28,7 @@ Este proyecto se basa en cuatro conceptos principales:
 
 1. Clonar este proyecto en tu entorno de trabajo/directorio local:
    ```bash
-   git clone https://github.com/xxxxx/xxxxx.git
+   git clone https://github.com/SebaPortill0/HAB_B.git
    ```
 
 2. Necesitarás tener instalados Docker y Docker Compose para poner en marcha el proyecto:
@@ -42,7 +42,7 @@ Este proyecto se basa en cuatro conceptos principales:
 
 1. Navega al repositorio:
    ```bash
-   cd /path/to/your-repo/xxxx
+   cd /path/to/your-repo/HAB_B
    ```
 
 2. Abre el archivo `config.yaml`:
@@ -69,10 +69,10 @@ Establece la variable `LLM_SERVER` para elegir tu proveedor de inferencia. Valor
 - openai
 - mistral
 - claude
-- gemini (Actualmente no soportado)
-- ollama (Actualmente no soportado)
+- gemini (Todavía no soportado)
+- ollama (Todavía no soportado)
 - groq
-- vllm (Actualmente no soportado)
+- vllm (Todavía no soportado)
 
 Ejemplo:
 
@@ -114,8 +114,8 @@ Es necesario configurar LLM Sherpa: https://github.com/nlmatics/nlm-ingestor
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/xxxx/xxxx.git
-   cd xxxx
+   git clone https://github.com/SebaPortill0/HAB_B.git
+   cd HAB_B
    ```
 
 2. Construye y ejecuta los contenedores:
