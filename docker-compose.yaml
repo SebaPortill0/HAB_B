@@ -6,9 +6,9 @@ services:
     build: .
     ports:
       - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1  # Ensure Python output is not buffered
-      - LLM_SHERPA_SERVER=http://nlm-ingestor:5001/api/parseDocument?renderFormat=all&useNewIndentParser=yes
+    # environment:
+    #   - PYTHONUNBUFFERED=1  # Ensure Python output is not buffered
+    #   - LLM_SHERPA_SERVER=http://nlm-ingestor:5001/api/parseDocument?renderFormat=all&useNewIndentParser=yes
     depends_on:
       - nlm-ingestor
     volumes:
